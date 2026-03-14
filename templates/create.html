@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DVT — New Project</title>
+<script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ["Inter", "sans-serif"] },
+        colors: {
+          ink:      "#0a0a0a",
+          "ink-2":  "#1a1a1a",
+          "ink-3":  "#2a2a2a",
+          mist:     "#f5f5f5",
+          "mist-2": "#ebebeb",
+          "mist-3": "#d4d4d4",
+          ghost:    "#737373",
+        }
+      }
+    }
+  }
+</script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Inter", sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background: #f5f5f5; color: #0a0a0a; min-height: 100vh; display: flex; flex-direction: column; }
+
+
+  /* ── Material icons ── */
+  .ms {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    display: inline-flex; align-items: center; justify-content: center; line-height: 1;
+    vertical-align: middle;
+  }
+  .ms-f {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    display: inline-flex; align-items: center; justify-content: center; line-height: 1;
+    vertical-align: middle;
+  }
+
+  /* ── Header — matches home.html exactly ── */
+  header {
+    position: sticky; top: 0; z-index: 50;
+    background: #0a0a0a;
+    height: 64px;
+    display: block;
+    flex-shrink: 0;
+  }
+  .header-inner {
+    max-width: 72rem; /* max-w-6xl */
+    margin: 0 auto;
+    padding: 0 32px;  /* px-8 */
+    height: 100%;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  }
+  .header-left { display: flex; align-items: center; gap: 32px; }
+
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: #fff; display: flex; align-items: center; justify-content: center;
+  }
+  .logo-text { color: #fff; font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+
+  .nav-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 8px;
+    background: rgba(255,255,255,0.10);
+    color: #fff; font-size: 14px; font-weight: 500;
+    text-decoration: none;
+  }
+
+  /* New Project button in header */
+  .header-new-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 16px; border-radius: 8px;
+    background: #fff; color: #0a0a0a;
+    font-size: 13px; font-weight: 600;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .header-new-btn:hover { background: #ebebeb; }
+
+  .user-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; border-radius: 8px;
+    background: transparent; border: none; cursor: pointer;
+    color: white; /* override browser button color reset */
+    font-family: "Inter", sans-serif;
+    transition: background 0.15s;
+  }
+  .user-btn:hover { background: rgba(255,255,255,0.10); }
+  .user-avatar {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .user-email { color: rgba(255,255,255,0.85); font-size: 14px; font-weight: 500; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Divider */
+  .header-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.15); }
+
+  /* Dropdown */
+  .dropdown {
+    position: absolute; right: 0; top: calc(100% + 8px);
+    width: 224px; background: #fff; border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18); overflow: hidden;
+    border: 1px solid #ebebeb;
+  }
+  .dropdown-header { padding: 12px 16px; border-bottom: 1px solid #ebebeb; }
+  .dropdown-label { font-size: 10px; font-weight: 600; color: #737373; text-transform: uppercase; letter-spacing: 0.08em; }
+  .dropdown-email { font-size: 13px; font-weight: 600; color: #0a0a0a; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dropdown-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px; font-size: 14px; color: #0a0a0a;
+    text-decoration: none; transition: background 0.12s;
+  }
+  .dropdown-item:hover { background: #f5f5f5; }
+
+  /* ── Main ── */
+  main { flex: 1; display: flex; justify-content: center; padding: 48px 24px 80px; }
+  .wrapper { width: 100%; max-width: 600px; }
+
+  /* ── Page heading ── */
+  .page-heading { margin-bottom: 28px; }
+  .page-heading h1 { font-size: 22px; font-weight: 700; color: #0a0a0a; letter-spacing: -0.3px; }
+  .page-heading p { font-size: 14px; color: #737373; margin-top: 4px; }
+
+  /* ── Progress — label + 3 dots only, no bar ── */
+  .progress-wrap { margin-bottom: 28px; }
+  .progress-label {
+    font-size: 12px; font-weight: 600; color: #737373;
+    margin-bottom: 12px; display: block;
+  }
+  .step-dots { display: flex; gap: 8px; }
+  .step-dot { height: 4px; border-radius: 99px; flex: 1; background: #e0e0e0; transition: background 0.3s; }
+  .step-dot.active { background: #0a0a0a; }
+  .step-dot.done   { background: #737373; }
+
+  /* ── Card ── */
+  .card {
+    background: #fff;
+    border: 1px solid #ebebeb;
+    border-radius: 20px;
+    padding: 36px;
+    transition: opacity 0.25s, transform 0.25s;
+  }
+  .card-eyebrow { font-size: 11px; font-weight: 600; color: #737373; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .card-title { font-size: 18px; font-weight: 700; color: #0a0a0a; letter-spacing: -0.2px; margin-bottom: 24px; }
+
+  /* ── Dropzone ── */
+  .dropzone {
+    border: 2px dashed #d4d4d4; border-radius: 14px;
+    background: #f5f5f5; padding: 48px 24px;
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    cursor: pointer; text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .dropzone:hover { border-color: #737373; background: #ebebeb; }
+  .dropzone.drag-over { border-color: #0a0a0a; background: #ebebeb; transform: scale(1.005); }
+
+  .dz-icon-box {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: #fff; border: 1px solid #d4d4d4;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .dz-title { font-size: 14px; font-weight: 600; color: #0a0a0a; }
+  .dz-sub   { font-size: 13px; color: #737373; line-height: 1.5; }
+
+  .format-tags { display: flex; gap: 6px; }
+  .fmt-tag {
+    padding: 3px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 600;
+    background: #fff; border: 1px solid #d4d4d4; color: #737373;
+    font-family: "Courier New", monospace; letter-spacing: 0.04em;
+  }
+
+  .browse-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 18px; border-radius: 10px;
+    background: #0a0a0a; color: #fff;
+    font-size: 13px; font-weight: 600;
+    border: none; cursor: pointer; transition: background 0.15s;
+  }
+  .browse-btn:hover { background: #1a1a1a; }
+
+  /* ── File preview ── */
+  .file-preview {
+    margin-top: 14px;
+    border: 1px solid #ebebeb; border-radius: 12px;
+    background: #f5f5f5; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    animation: slideIn 0.22s ease;
+  }
+  @keyframes slideIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+  .fp-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: #0a0a0a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .fp-name { font-size: 13px; font-weight: 600; color: #0a0a0a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fp-size { font-size: 11px; color: #737373; margin-top: 2px; }
+  .fp-remove {
+    width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+    border: 1px solid #d4d4d4; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .fp-remove:hover { background: #0a0a0a; border-color: #0a0a0a; }
+  .fp-remove:hover .material-symbols-outlined { color: #fff; }
+
+  .file-error {
+    margin-top: 10px; font-size: 13px; color: #737373;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  /* ── Name input — matches auth.html email input exactly ── */
+  .name-input-wrap {
+    position: relative;
+    border-radius: 12px;
+    transition: box-shadow 0.18s;
+  }
+  .name-input-wrap:focus-within {
+    box-shadow: 0 0 0 3px rgba(10,10,10,0.10);
+  }
+  .name-input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%; transform: translateY(-50%);
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+    color: #c0c0c0;
+    font-size: 18px;
+    line-height: 1;
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+    transition: color 0.18s;
+  }
+  .name-input-wrap:focus-within .name-input-icon { color: #0a0a0a; }
+  .name-input {
+    width: 100%; height: 52px;
+    padding: 0 16px 0 50px;
+    font-size: 14px; font-family: "Inter", sans-serif; font-weight: 400;
+    color: #0a0a0a; background: #fff;
+    border: 1.5px solid #e0e0e0; border-radius: 12px;
+    outline: none;
+    box-shadow: none;
+    transition: border-color 0.18s;
+  }
+  .name-input:hover { border-color: #b0b0b0; }
+  .name-input:focus { border-color: #0a0a0a; box-shadow: none; outline: none; }
+  .name-input::placeholder { color: #c8c8c8; }
+  .input-hint { margin-top: 8px; font-size: 12px; color: #737373; }
+  .name-field-label {
+    display: block;
+    font-size: 11px; font-weight: 600;
+    color: #737373;
+    text-transform: uppercase; letter-spacing: 0.09em;
+    margin-bottom: 8px;
+  }
+
+  /* ── Category search ── */
+  .cat-search-wrap {
+    position: relative;
+    margin-bottom: 14px;
+  }
+  .cat-search-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: #c0c0c0; font-size: 18px; pointer-events: none;
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+    line-height: 1;
+  }
+  .cat-search-input {
+    width: 100%; height: 44px;
+    padding: 0 16px 0 44px;
+    font-size: 13px; font-family: "Inter", sans-serif;
+    color: #0a0a0a; background: #f5f5f5;
+    border: 1.5px solid #e0e0e0; border-radius: 10px;
+    outline: none; transition: border-color 0.18s;
+  }
+  .cat-search-input:focus { border-color: #0a0a0a; background: #fff; }
+  .cat-search-input::placeholder { color: #c0c0c0; }
+
+  /* ── Category grid ── */
+  .category-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    max-height: 340px; overflow-y: auto;
+    padding-right: 2px;
+    scrollbar-width: thin; scrollbar-color: #d4d4d4 transparent;
+  }
+  .category-grid::-webkit-scrollbar { width: 4px; }
+  .category-grid::-webkit-scrollbar-track { background: transparent; }
+  .category-grid::-webkit-scrollbar-thumb { background: #d4d4d4; border-radius: 99px; }
+  .cat-tile {
+    border: 1.5px solid #ebebeb; border-radius: 14px;
+    background: #fff; padding: 20px 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    cursor: pointer; text-align: center; transition: all 0.18s;
+  }
+  .cat-tile:hover { border-color: #737373; background: #f5f5f5; transform: translateY(-1px); }
+  .cat-tile.selected { border-color: #0a0a0a; background: #0a0a0a; }
+  .cat-tile .material-symbols-outlined { font-size: 22px; color: #737373; transition: color 0.18s; }
+  .cat-tile:hover .material-symbols-outlined { color: #0a0a0a; }
+  .cat-tile.selected .material-symbols-outlined { color: #fff; }
+  .cat-label { font-size: 12px; font-weight: 500; color: #737373; transition: color 0.18s; }
+  .cat-tile:hover .cat-label { color: #0a0a0a; }
+  .cat-tile.selected .cat-label { color: #fff; font-weight: 600; }
+
+  /* ── Nav row ── */
+  .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
+  .btn-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 0 20px; height: 44px; border-radius: 12px;
+    font-size: 13px; font-weight: 500; color: #737373;
+    background: transparent; border: 1.5px solid #d4d4d4;
+    cursor: pointer; transition: all 0.15s; text-decoration: none;
+  }
+  .btn-back:hover { background: #f5f5f5; color: #0a0a0a; border-color: #737373; }
+
+  .btn-next {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 0 28px; height: 44px; border-radius: 12px;
+    font-size: 13px; font-weight: 600; color: #fff;
+    background: #0a0a0a; border: none; cursor: pointer;
+    transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  }
+  .btn-next:hover:not(:disabled) { background: #1a1a1a; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.22); }
+  .btn-next:active:not(:disabled) { transform: translateY(0); }
+  .btn-next:disabled { opacity: 0.32; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* ── Result card ── */
+  .result-center { text-align: center; padding: 52px 36px; }
+  .result-icon-box {
+    width: 64px; height: 64px; border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    background: #f5f5f5; border: 1px solid #d4d4d4;
+  }
+  .result-icon-box .material-symbols-outlined { font-size: 30px; color: #0a0a0a; }
+  .result-title { font-size: 20px; font-weight: 700; color: #0a0a0a; letter-spacing: -0.3px; margin-bottom: 6px; }
+  .result-sub   { font-size: 13px; color: #737373; line-height: 1.5; }
+  .result-actions { display: flex; gap: 10px; justify-content: center; margin-top: 28px; }
+
+  /* ── Flash ── */
+  .flash-wrap {
+    position: fixed; top: 76px; right: 20px; z-index: 999;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .flash-msg {
+    padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 500;
+    display: flex; align-items: center; gap: 8px;
+    background: #fff; border: 1px solid #ebebeb;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10); color: #0a0a0a;
+    animation: slideIn 0.2s ease;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     HEADER — same max-w-6xl / px-8 as home.html
+══════════════════════════════════════ -->
+<header>
+  <div class="header-inner">
+
+    <!-- Left: logo + nav -->
+    <div class="header-left">
+      <a href="{{ url_for('home_page') }}" class="logo">
+        <div class="logo-icon">
+          <span class="material-symbols-outlined ms-f" style="font-size:15px;color:#0a0a0a;">database</span>
+        </div>
+        <span class="logo-text">DVT</span>
+      </a>
+      <a href="{{ url_for('home_page') }}" class="nav-pill">
+        <span class="material-symbols-outlined ms" style="font-size:15px;">grid_view</span>
+        Dashboard
+      </a>
+    </div>
+
+    <!-- Right: new project + divider + user -->
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="{{ url_for('create_page') }}" class="header-new-btn">
+        <span class="material-symbols-outlined ms" style="font-size:16px;">add</span>
+        New Project
+      </a>
+      <div class="header-divider"></div>
+      <div style="position:relative;">
+        <button class="user-btn profile-button">
+          <div class="user-avatar">
+            <span class="material-symbols-outlined ms-f" style="font-size:14px;color:#fff;">person</span>
+          </div>
+          <span class="user-email">{{ user_email }}</span>
+          <span class="material-symbols-outlined ms" style="font-size:16px;color:rgba(255,255,255,0.4);">expand_more</span>
+        </button>
+        <div id="profile-dropdown" class="dropdown" style="display:none;">
+          <div class="dropdown-header">
+            <p class="dropdown-label">Signed in as</p>
+            <p class="dropdown-email">{{ user_email }}</p>
+          </div>
+          <a href="{{ url_for('logout') }}" class="dropdown-item">
+            <span class="material-symbols-outlined ms" style="font-size:16px;color:#737373;">logout</span>
+            Sign out
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+
+<!-- ══════════════════════════════════════
+     MAIN
+══════════════════════════════════════ -->
+<main>
+<div class="wrapper">
+
+  <!-- Page title -->
+  <div class="page-heading">
+    <h1>New Project</h1>
+    <p>Upload a dataset and configure your validation workflow.</p>
+  </div>
+
+  {% if request.args.get('created') == '1' %}
+  <!-- ── Success ── -->
+  <div class="card result-center">
+    <div class="result-icon-box">
+      <span class="material-symbols-outlined ms-f">check_circle</span>
+    </div>
+    <h2 class="result-title">Project Created</h2>
+    <p class="result-sub">Your dataset has been uploaded and is ready to explore.</p>
+    <div class="result-actions">
+      <a href="{{ url_for('home_page') }}" class="btn-back">
+        <span class="material-symbols-outlined ms" style="font-size:15px;">arrow_back</span>
+        Back to Projects
+      </a>
+      <a href="{{ url_for('create_page') }}" class="btn-next">
+        <span class="material-symbols-outlined ms" style="font-size:15px;">add</span>
+        New Project
+      </a>
+    </div>
+  </div>
+
+  {% else %}
+
+  <!-- ── Progress: step label + 3 dots only ── -->
+  <div class="progress-wrap" id="progress-ui">
+    <span class="progress-label" id="step-label">Step 1 of 3 — Upload file</span>
+    <div class="step-dots">
+      <div class="step-dot active" id="dot-0"></div>
+      <div class="step-dot" id="dot-1"></div>
+      <div class="step-dot" id="dot-2"></div>
+    </div>
+  </div>
+
+  <!-- ── Form ── -->
+  <form id="project-form" method="POST" action="{{ url_for('create_project') }}" enctype="multipart/form-data">
+
+    <!-- STAGE 1: Upload -->
+    <div id="stage-1" class="card" style="display:block;">
+      <p class="card-eyebrow">Step 1 of 3</p>
+      <h2 class="card-title">Upload your file</h2>
+      <div id="upload-area">
+        <div class="dropzone" id="dropzone">
+          <div class="dz-icon-box">
+            <span class="material-symbols-outlined ms" style="font-size:24px;color:#737373;">upload_file</span>
+          </div>
+          <div>
+            <p class="dz-title">Drop your file here</p>
+            <p class="dz-sub">CSV or XLSX, up to any size</p>
+          </div>
+          <div class="format-tags">
+            <span class="fmt-tag">.CSV</span>
+            <span class="fmt-tag">.XLSX</span>
+          </div>
+          <button type="button" id="select-file-btn" class="browse-btn">
+            <span class="material-symbols-outlined ms" style="font-size:15px;">folder_open</span>
+            Browse Files
+          </button>
+          <input type="file" id="file-input" name="file" accept=".csv,.xlsx" hidden>
+        </div>
+      </div>
+      <div id="file-preview" class="file-preview" style="display:none;">
+        <div class="fp-icon">
+          <span class="material-symbols-outlined ms-f" style="font-size:18px;color:#fff;">description</span>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <p class="fp-name" id="fp-name"></p>
+          <p class="fp-size" id="fp-size"></p>
+        </div>
+        <button type="button" class="fp-remove" id="remove-file-btn">
+          <span class="material-symbols-outlined ms" style="font-size:14px;color:#737373;">close</span>
+        </button>
+      </div>
+      <p id="file-error" class="file-error" style="display:none;">
+        <span class="material-symbols-outlined ms" style="font-size:15px;">error_outline</span>
+        Unsupported format — please upload a CSV or XLSX file.
+      </p>
+    </div>
+
+    <!-- STAGE 2: Name -->
+    <div id="stage-2" class="card" style="display:none;">
+      <input type="hidden" id="project-category" name="project_category" value="general">
+      <p class="card-eyebrow">Step 2 of 3</p>
+      <h2 class="card-title" style="margin-bottom:20px;">Name your project</h2>
+      <label class="name-field-label" for="project-name">Project name</label>
+      <div class="name-input-wrap">
+        <span class="material-symbols-outlined name-input-icon">edit</span>
+        <input type="text"
+               id="project-name" name="project_name"
+               class="name-input"
+               placeholder="e.g. Sales Q4 2024 Analysis"
+               autocomplete="off"/>
+      </div>
+      <p class="input-hint">Minimum 3 characters required</p>
+    </div>
+
+    <!-- STAGE 3: Category -->
+    <div id="stage-3" class="card" style="display:none;">
+      <p class="card-eyebrow">Step 3 of 3</p>
+      <h2 class="card-title" style="margin-bottom:16px;">Choose a category</h2>
+      <div class="cat-search-wrap">
+        <span class="material-symbols-outlined ms cat-search-icon">search</span>
+        <input type="text" id="cat-search" class="cat-search-input" placeholder="Search categories…" autocomplete="off"/>
+      </div>
+      <div class="category-grid" id="category-grid">
+        <button type="button" class="cat-tile" data-category="analytics">
+          <span class="material-symbols-outlined ms">analytics</span>
+          <span class="cat-label">Analytics</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="database">
+          <span class="material-symbols-outlined ms">database</span>
+          <span class="cat-label">Database</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="cloud">
+          <span class="material-symbols-outlined ms">cloud</span>
+          <span class="cat-label">Cloud</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="medical">
+          <span class="material-symbols-outlined ms">medical_services</span>
+          <span class="cat-label">Medical</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="shopping">
+          <span class="material-symbols-outlined ms">shopping_cart</span>
+          <span class="cat-label">E-Commerce</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="general">
+          <span class="material-symbols-outlined ms">folder</span>
+          <span class="cat-label">General</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="finance">
+          <span class="material-symbols-outlined ms">account_balance</span>
+          <span class="cat-label">Finance</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="marketing">
+          <span class="material-symbols-outlined ms">campaign</span>
+          <span class="cat-label">Marketing</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="sales">
+          <span class="material-symbols-outlined ms">trending_up</span>
+          <span class="cat-label">Sales</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="hr">
+          <span class="material-symbols-outlined ms">groups</span>
+          <span class="cat-label">HR</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="logistics">
+          <span class="material-symbols-outlined ms">local_shipping</span>
+          <span class="cat-label">Logistics</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="education">
+          <span class="material-symbols-outlined ms">school</span>
+          <span class="cat-label">Education</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="research">
+          <span class="material-symbols-outlined ms">biotech</span>
+          <span class="cat-label">Research</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="legal">
+          <span class="material-symbols-outlined ms">gavel</span>
+          <span class="cat-label">Legal</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="real_estate">
+          <span class="material-symbols-outlined ms">apartment</span>
+          <span class="cat-label">Real Estate</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="manufacturing">
+          <span class="material-symbols-outlined ms">factory</span>
+          <span class="cat-label">Manufacturing</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="retail">
+          <span class="material-symbols-outlined ms">storefront</span>
+          <span class="cat-label">Retail</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="supply_chain">
+          <span class="material-symbols-outlined ms">conveyor_belt</span>
+          <span class="cat-label">Supply Chain</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="agriculture">
+          <span class="material-symbols-outlined ms">agri</span>
+          <span class="cat-label">Agriculture</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="energy">
+          <span class="material-symbols-outlined ms">bolt</span>
+          <span class="cat-label">Energy</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="environment">
+          <span class="material-symbols-outlined ms">eco</span>
+          <span class="cat-label">Environment</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="government">
+          <span class="material-symbols-outlined ms">account_balance_wallet</span>
+          <span class="cat-label">Government</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="transport">
+          <span class="material-symbols-outlined ms">directions_bus</span>
+          <span class="cat-label">Transport</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="telecom">
+          <span class="material-symbols-outlined ms">cell_tower</span>
+          <span class="cat-label">Telecom</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="media">
+          <span class="material-symbols-outlined ms">movie</span>
+          <span class="cat-label">Media</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="gaming">
+          <span class="material-symbols-outlined ms">sports_esports</span>
+          <span class="cat-label">Gaming</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="social">
+          <span class="material-symbols-outlined ms">people</span>
+          <span class="cat-label">Social</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="security">
+          <span class="material-symbols-outlined ms">security</span>
+          <span class="cat-label">Security</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="iot">
+          <span class="material-symbols-outlined ms">sensors</span>
+          <span class="cat-label">IoT</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="ai_ml">
+          <span class="material-symbols-outlined ms">smart_toy</span>
+          <span class="cat-label">AI / ML</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="devops">
+          <span class="material-symbols-outlined ms">terminal</span>
+          <span class="cat-label">DevOps</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="qa">
+          <span class="material-symbols-outlined ms">checklist</span>
+          <span class="cat-label">QA</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="crm">
+          <span class="material-symbols-outlined ms">contact_page</span>
+          <span class="cat-label">CRM</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="inventory">
+          <span class="material-symbols-outlined ms">inventory</span>
+          <span class="cat-label">Inventory</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="payments">
+          <span class="material-symbols-outlined ms">payments</span>
+          <span class="cat-label">Payments</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="insurance">
+          <span class="material-symbols-outlined ms">health_and_safety</span>
+          <span class="cat-label">Insurance</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="banking">
+          <span class="material-symbols-outlined ms">savings</span>
+          <span class="cat-label">Banking</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="crypto">
+          <span class="material-symbols-outlined ms">currency_bitcoin</span>
+          <span class="cat-label">Crypto</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="tourism">
+          <span class="material-symbols-outlined ms">flight</span>
+          <span class="cat-label">Tourism</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="hospitality">
+          <span class="material-symbols-outlined ms">hotel</span>
+          <span class="cat-label">Hospitality</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="food">
+          <span class="material-symbols-outlined ms">restaurant</span>
+          <span class="cat-label">Food & Drink</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="fitness">
+          <span class="material-symbols-outlined ms">fitness_center</span>
+          <span class="cat-label">Fitness</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="pharma">
+          <span class="material-symbols-outlined ms">medication</span>
+          <span class="cat-label">Pharma</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="construction">
+          <span class="material-symbols-outlined ms">construction</span>
+          <span class="cat-label">Construction</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="engineering">
+          <span class="material-symbols-outlined ms">engineering</span>
+          <span class="cat-label">Engineering</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="climate">
+          <span class="material-symbols-outlined ms">water</span>
+          <span class="cat-label">Climate</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="space">
+          <span class="material-symbols-outlined ms">rocket_launch</span>
+          <span class="cat-label">Space</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="sports">
+          <span class="material-symbols-outlined ms">sports_soccer</span>
+          <span class="cat-label">Sports</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="nonprofit">
+          <span class="material-symbols-outlined ms">volunteer_activism</span>
+          <span class="cat-label">Non-Profit</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="publishing">
+          <span class="material-symbols-outlined ms">menu_book</span>
+          <span class="cat-label">Publishing</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="advertising">
+          <span class="material-symbols-outlined ms">ads_click</span>
+          <span class="cat-label">Advertising</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="customer_svc">
+          <span class="material-symbols-outlined ms">support_agent</span>
+          <span class="cat-label">Customer Svc</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="procurement">
+          <span class="material-symbols-outlined ms">receipt_long</span>
+          <span class="cat-label">Procurement</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="compliance">
+          <span class="material-symbols-outlined ms">policy</span>
+          <span class="cat-label">Compliance</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="audit">
+          <span class="material-symbols-outlined ms">find_in_page</span>
+          <span class="cat-label">Audit</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="project_mgmt">
+          <span class="material-symbols-outlined ms">task_alt</span>
+          <span class="cat-label">Project Mgmt</span>
+        </button>
+        <button type="button" class="cat-tile" data-category="events">
+          <span class="material-symbols-outlined ms">event</span>
+          <span class="cat-label">Events</span>
+        </button>
+      </div>
+      <p id="cat-no-results" style="display:none;font-size:13px;color:#737373;margin-top:16px;text-align:center;">No categories found.</p>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-row" id="nav-row">
+      <button type="button" id="btn-back" class="btn-back" style="visibility:hidden;">
+        <span class="material-symbols-outlined ms" style="font-size:15px;">arrow_back</span>
+        Back
+      </button>
+      <button type="button" id="btn-next" class="btn-next" disabled>
+        Continue
+        <span class="material-symbols-outlined ms" id="next-icon" style="font-size:15px;">arrow_forward</span>
+      </button>
+    </div>
+
+  </form>
+  {% endif %}
+
+</div>
+</main>
+
+
+<!-- Flash messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-wrap">
+    {% for category, message in messages %}
+    <div class="flash-msg">
+      <span class="material-symbols-outlined ms" style="font-size:16px;color:{% if category == 'success' %}#0a0a0a{% else %}#737373{% endif %};">
+        {% if category == 'success' %}check_circle{% else %}error_outline{% endif %}
+      </span>
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+
+<script>
+// ── Profile dropdown ──────────────────────────────
+(function () {
+  const btn  = document.querySelector('.profile-button');
+  const drop = document.getElementById('profile-dropdown');
+  if (!btn || !drop) return;
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    drop.style.display = drop.style.display === 'none' ? 'block' : 'none';
+  });
+  document.addEventListener('click', e => {
+    if (!btn.contains(e.target) && !drop.contains(e.target))
+      drop.style.display = 'none';
+  });
+})();
+
+// ── Multi-step form ───────────────────────────────
+(function () {
+  const stages  = ['stage-1','stage-2','stage-3'].map(id => document.getElementById(id));
+  if (!stages[0]) return; // success page
+
+  const dots     = [0,1,2].map(i => document.getElementById('dot-' + i));
+  const labelEl  = document.getElementById('step-label');
+  const btnBack  = document.getElementById('btn-back');
+  const btnNext  = document.getElementById('btn-next');
+  const nextIcon = document.getElementById('next-icon');
+  const form     = document.getElementById('project-form');
+
+  const fileInput  = document.getElementById('file-input');
+  const dropzone   = document.getElementById('dropzone');
+  const selectBtn  = document.getElementById('select-file-btn');
+  const uploadArea = document.getElementById('upload-area');
+  const fpWrap     = document.getElementById('file-preview');
+  const fpName     = document.getElementById('fp-name');
+  const fpSize     = document.getElementById('fp-size');
+  const removeBtn  = document.getElementById('remove-file-btn');
+  const fileError  = document.getElementById('file-error');
+  const nameInput  = document.getElementById('project-name');
+  const catInput   = document.getElementById('project-category');
+  const catTiles   = document.querySelectorAll('.cat-tile');
+
+  const STEP_LABELS = [
+    'Step 1 of 3 — Upload file',
+    'Step 2 of 3 — Name your project',
+    'Step 3 of 3 — Choose a category',
+  ];
+
+  let step = 0;
+  let fileOK = false, nameOK = false, catOK = false;
+
+  function fmtSize(b) {
+    if (b === 0) return '0 B';
+    const u = ['B','KB','MB','GB'];
+    const i = Math.floor(Math.log(b) / Math.log(1024));
+    return (b / Math.pow(1024, i)).toFixed(1) + ' ' + u[i];
+  }
+
+  function updateUI() {
+    labelEl.textContent = STEP_LABELS[step];
+
+    dots.forEach((d, i) => {
+      d.className = 'step-dot';
+      if (i < step)      d.classList.add('done');
+      else if (i === step) d.classList.add('active');
+    });
+
+    btnBack.style.visibility = step === 0 ? 'hidden' : 'visible';
+    btnNext.disabled = ![fileOK, nameOK, catOK][step];
+
+    if (step < 2) {
+      btnNext.childNodes[0].textContent = 'Continue ';
+      nextIcon.textContent = 'arrow_forward';
+    } else {
+      btnNext.childNodes[0].textContent = 'Create Project ';
+      nextIcon.textContent = 'check';
+    }
+  }
+
+  function goTo(target) {
+    const cur = stages[step];
+    cur.style.opacity = '0';
+    cur.style.transform = 'translateY(8px)';
+    setTimeout(() => {
+      cur.style.display = 'none';
+      cur.style.opacity = '';
+      cur.style.transform = '';
+      step = target;
+      const nxt = stages[step];
+      nxt.style.display = 'block';
+      nxt.style.opacity = '0';
+      nxt.style.transform = 'translateY(8px)';
+      setTimeout(() => { nxt.style.opacity = ''; nxt.style.transform = ''; }, 20);
+      updateUI();
+      if (step === 1) nameInput.focus();
+    }, 220);
+  }
+
+  // File
+  selectBtn.addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault(); dropzone.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) {
+      const dt = new DataTransfer();
+      dt.items.add(e.dataTransfer.files[0]);
+      fileInput.files = dt.files;
+      fileInput.dispatchEvent(new Event('change'));
+    }
+  });
+
+  fileInput.addEventListener('change', () => {
+    const f = fileInput.files[0];
+    if (!f) return;
+    const ext = f.name.split('.').pop().toLowerCase();
+    if (ext === 'csv' || ext === 'xlsx') {
+      fileOK = true;
+      fileError.style.display = 'none';
+      fpName.textContent = f.name;
+      fpSize.textContent = fmtSize(f.size);
+      uploadArea.style.display = 'none';
+      fpWrap.style.display = 'flex';
+    } else {
+      fileOK = false;
+      fileError.style.display = 'flex';
+    }
+    updateUI();
+  });
+
+  removeBtn.addEventListener('click', () => {
+    fileInput.value = '';
+    fileOK = false;
+    uploadArea.style.display = 'block';
+    fpWrap.style.display = 'none';
+    fileError.style.display = 'none';
+    updateUI();
+  });
+
+  // Name
+  nameInput.addEventListener('input', () => {
+    nameOK = nameInput.value.trim().length >= 3;
+    updateUI();
+  });
+
+  // Intercept Enter key on name input — advance stage instead of submitting
+  nameInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (nameOK) goTo(step + 1);
+    }
+  });
+
+  // Intercept Enter anywhere in the form — never allow implicit submit on stage 1 or 2
+  form.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      if (step < 2 && [fileOK, nameOK, catOK][step]) goTo(step + 1);
+      else if (step === 2 && catOK) form.submit();
+    }
+  });
+
+  // Category
+  catTiles.forEach(tile => {
+    tile.addEventListener('click', () => {
+      catTiles.forEach(t => t.classList.remove('selected'));
+      tile.classList.add('selected');
+      catInput.value = tile.dataset.category;
+      catOK = true;
+      updateUI();
+    });
+  });
+
+  // Category search filter
+  const catSearchInput = document.getElementById('cat-search');
+  const catNoResults   = document.getElementById('cat-no-results');
+  if (catSearchInput) {
+    catSearchInput.addEventListener('input', function () {
+      const q = this.value.trim().toLowerCase();
+      let visible = 0;
+      catTiles.forEach(tile => {
+        const label = tile.querySelector('.cat-label').textContent.toLowerCase();
+        const cat   = (tile.dataset.category || '').toLowerCase();
+        const show  = !q || label.includes(q) || cat.includes(q);
+        tile.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      catNoResults.style.display = visible === 0 ? 'block' : 'none';
+    });
+    // Block Enter on search so it doesn't advance stage
+    catSearchInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') e.preventDefault();
+    });
+  }
+
+  // Nav
+  btnBack.addEventListener('click', () => { if (step > 0) goTo(step - 1); });
+  btnNext.addEventListener('click', () => {
+    if (step < 2) goTo(step + 1);
+    else form.submit();
+  });
+
+  // Init transitions
+  stages.forEach(s => { s.style.transition = 'opacity 0.22s ease, transform 0.22s ease'; });
+  updateUI();
+})();
+</script>
+</body>
+</html>

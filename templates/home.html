@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DVT Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ["Inter", "sans-serif"] },
+        colors: {
+          ink:    "#0a0a0a",
+          "ink-2": "#1a1a1a",
+          "ink-3": "#2a2a2a",
+          mist:   "#f5f5f5",
+          "mist-2": "#ebebeb",
+          "mist-3": "#d4d4d4",
+          ghost:  "#737373",
+        }
+      }
+    }
+  }
+</script>
+<style type="text/tailwindcss">
+  * { @apply antialiased; }
+  body { @apply bg-mist text-ink font-sans; }
+
+  .ms {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    display: inline-flex; align-items: center; justify-content: center; line-height: 1;
+  }
+  .ms-f {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    display: inline-flex; align-items: center; justify-content: center; line-height: 1;
+  }
+
+  .project-row { @apply transition-colors duration-150 cursor-default; }
+  .project-row:hover { @apply bg-mist/70; }
+
+  .btn-primary {
+    @apply inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg
+           text-white bg-ink hover:bg-ink-2 transition-all duration-150 select-none;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-lg border border-mist-3
+           text-ghost bg-white hover:bg-ink hover:text-white hover:border-ink
+           transition-all duration-150 select-none;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-md
+           bg-mist-2 text-ghost border border-mist-3 leading-none;
+  }
+  .file-dot {
+    @apply flex-shrink-0 w-9 h-9 rounded-xl bg-ink flex items-center justify-center;
+  }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ══════════════════════════════════════
+     HEADER — full black
+══════════════════════════════════════ -->
+<header class="sticky top-0 z-50 bg-ink">
+  <div class="max-w-6xl mx-auto px-8 h-16 flex items-center justify-between gap-6">
+
+    <!-- Logo + nav -->
+    <div class="flex items-center gap-8">
+      <a href="{{ url_for('home_page') }}" class="flex items-center gap-2.5 select-none">
+        <div class="w-7 h-7 rounded-lg bg-white flex items-center justify-center">
+          <span class="material-symbols-outlined ms-f text-ink text-[15px]">database</span>
+        </div>
+        <span class="text-white font-bold text-[15px] tracking-tight">DVT</span>
+      </a>
+      <nav class="hidden md:flex items-center">
+        <a href="{{ url_for('home_page') }}"
+           class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-white text-sm font-medium">
+          <span class="material-symbols-outlined ms text-[15px]">grid_view</span>
+          Dashboard
+        </a>
+      </nav>
+    </div>
+
+    <!-- Right side -->
+    <div class="flex items-center gap-3">
+      <a href="{{ url_for('create_page') }}"
+         class="flex items-center gap-1.5 px-4 py-2 bg-white text-ink text-sm font-semibold
+                rounded-lg hover:bg-mist transition-all duration-150 active:scale-95">
+        <span class="material-symbols-outlined ms text-[16px]">add</span>
+        New Project
+      </a>
+
+      <div class="w-px h-5 bg-white/15"></div>
+
+      <!-- User menu -->
+      <div class="relative">
+        <button class="profile-button flex items-center gap-2 px-2.5 py-1.5 rounded-lg
+                       hover:bg-white/10 transition-colors">
+          <div class="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center">
+            <span class="material-symbols-outlined ms-f text-white text-[14px]">person</span>
+          </div>
+          <span class="text-white/90 text-sm font-medium max-w-[180px] truncate">{{ user_email }}</span>
+          <span class="material-symbols-outlined ms text-white/40 text-[16px]">expand_more</span>
+        </button>
+
+        <div id="profile-dropdown"
+             class="absolute right-0 mt-2 w-56 rounded-xl bg-white shadow-2xl
+                    ring-1 ring-black/8 hidden py-1.5 z-50">
+          <div class="px-4 py-3 border-b border-mist-2">
+            <p class="text-[10px] font-semibold text-ghost uppercase tracking-widest">Signed in as</p>
+            <p class="text-sm font-semibold text-ink truncate mt-0.5">{{ user_email }}</p>
+          </div>
+          <a href="{{ url_for('logout') }}"
+             class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink hover:bg-mist transition-colors">
+            <span class="material-symbols-outlined ms text-ghost text-[16px]">logout</span>
+            Sign out
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<!-- ══════════════════════════════════════
+     MAIN
+══════════════════════════════════════ -->
+<main>
+  <div class="max-w-6xl mx-auto px-8 py-10">
+
+    <!-- Page heading -->
+    <div class="mb-8">
+      <h1 class="text-[22px] font-bold text-ink tracking-tight">Projects</h1>
+      <p class="text-sm text-ghost mt-1">Manage and monitor your data validation workflows.</p>
+    </div>
+
+    <!-- Search bar -->
+    <div class="mb-8 relative">
+      <span class="material-symbols-outlined ms text-ghost text-[18px]
+                   absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
+      <input id="search-input" type="text"
+        placeholder="Search by name, category, date, time…"
+        class="w-full h-11 pl-10 pr-28 bg-white border border-mist-3 rounded-xl
+               text-sm text-ink placeholder:text-ghost
+               focus:outline-none focus:border-ink transition-all duration-150"/>
+      <span id="result-count"
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-ghost hidden"></span>
+    </div>
+
+    <!-- Section label -->
+    <p class="text-[11px] font-semibold text-ghost uppercase tracking-widest mb-4">Recent Projects</p>
+
+    {% if projects %}
+    <!-- Projects table -->
+    <div class="bg-white rounded-2xl border border-mist-2 overflow-hidden">
+      <table class="w-full text-left table-fixed">
+        <thead>
+          <tr class="border-b border-mist-2">
+            <th class="px-6 py-3.5 text-[11px] font-semibold text-ghost uppercase tracking-wider">
+              Project
+            </th>
+            <th class="px-6 py-3.5 text-[11px] font-semibold text-ghost uppercase tracking-wider w-44">
+              Category
+            </th>
+            <th class="px-6 py-3.5 text-[11px] font-semibold text-ghost uppercase tracking-wider w-40">
+              Created
+            </th>
+            <th class="px-6 py-3.5 w-28 text-right text-[11px] font-semibold text-ghost uppercase tracking-wider">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody id="projects-table-body" class="divide-y divide-mist-2">
+          {% for project in projects %}
+          <tr class="project-row"
+              data-project-id="{{ project.project_id }}"
+              data-project-name="{{ project.project_name }}"
+              data-project-category="{{ project.project_category }}"
+              data-file-name="{{ project.file_name }}"
+              data-project-date="{{ project.project_date }}"
+              data-project-time="{{ project.project_time }}">
+
+            <!-- Name + file -->
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="file-dot">
+                  <span class="material-symbols-outlined ms-f text-white text-[15px]">description</span>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-sm font-semibold text-ink truncate">{{ project.project_name }}</div>
+                  <div class="flex items-center gap-1 text-[11px] text-ghost mt-0.5 truncate">
+                    <span class="material-symbols-outlined ms text-[11px]">attach_file</span>
+                    {{ project.file_name }}
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Category badge -->
+            <td class="px-6 py-4">
+              <span class="badge">
+                <span class="material-symbols-outlined ms text-[11px]">label</span>
+                {{ project.project_category }}
+              </span>
+            </td>
+
+            <!-- Date + time -->
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-1.5 text-sm text-ink font-medium">
+                <span class="material-symbols-outlined ms text-ghost text-[13px]">calendar_today</span>
+                {{ project.project_date }}
+              </div>
+              <div class="flex items-center gap-1.5 text-[11px] text-ghost mt-0.5">
+                <span class="material-symbols-outlined ms text-[11px]">schedule</span>
+                {{ project.project_time }}
+              </div>
+            </td>
+
+            <!-- Actions -->
+            <td class="px-6 py-4">
+              <div class="flex items-center justify-end gap-2">
+                <a href="{{ url_for('project_page', project_id=project.project_id) }}"
+                   class="btn-primary">
+                  <span class="material-symbols-outlined ms text-[13px]">open_in_new</span>
+                  Open
+                </a>
+                <button
+                  onclick="confirmDelete({{ project.project_id }}, '{{ project.project_name | escape }}')"
+                  class="btn-outline" title="Delete project">
+                  <span class="material-symbols-outlined ms text-[14px]">delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <!-- No search results state -->
+      <div id="no-results" class="hidden py-16 text-center">
+        <span class="material-symbols-outlined ms text-mist-3 block mb-3" style="font-size:40px">search_off</span>
+        <p class="text-sm text-ghost">No projects match your search.</p>
+      </div>
+    </div>
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="bg-white rounded-2xl border border-mist-2 py-20 text-center">
+      <div class="inline-flex flex-col items-center gap-4">
+        <div class="w-14 h-14 rounded-2xl bg-mist-2 flex items-center justify-center">
+          <span class="material-symbols-outlined ms text-ghost" style="font-size:30px">folder_open</span>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-ink">No projects yet</p>
+          <p class="text-sm text-ghost mt-1">Create your first project to get started.</p>
+        </div>
+        <a href="{{ url_for('create_page') }}"
+           class="flex items-center gap-2 px-5 py-2.5 bg-ink text-white text-sm font-semibold
+                  rounded-xl hover:bg-ink-2 transition-colors mt-1">
+          <span class="material-symbols-outlined ms text-[16px]">add</span>
+          New Project
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</main>
+
+
+<!-- ══════════════════════════════════════
+     DELETE MODAL
+══════════════════════════════════════ -->
+<div id="delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onclick="closeDeleteModal()"></div>
+
+  <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 z-10 overflow-hidden">
+    <!-- Accent stripe -->
+    <div class="h-[3px] bg-ink w-full"></div>
+
+    <div class="p-6">
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 rounded-xl bg-mist-2 flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined ms text-ink text-xl">delete_forever</span>
+        </div>
+        <div>
+          <h3 class="text-[15px] font-bold text-ink">Delete project?</h3>
+          <p class="text-sm text-ghost mt-1 leading-relaxed">
+            "<span id="modal-project-name" class="text-ink font-semibold"></span>"
+            and all its files will be permanently removed.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex gap-2.5 mt-6">
+        <button onclick="closeDeleteModal()"
+          class="flex-1 px-4 py-2.5 text-sm font-medium text-ghost bg-mist hover:bg-mist-2
+                 border border-mist-3 rounded-xl transition-colors">
+          Cancel
+        </button>
+        <button id="modal-confirm-btn"
+          class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-ink hover:bg-ink-2
+                 rounded-xl transition-colors inline-flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined ms text-[15px]">delete</span>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ─── Profile dropdown ───────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const btn  = document.querySelector('.profile-button');
+  const drop = document.getElementById('profile-dropdown');
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    drop.classList.toggle('hidden');
+  });
+  document.addEventListener('click', e => {
+    if (!btn.contains(e.target) && !drop.contains(e.target))
+      drop.classList.add('hidden');
+  });
+});
+
+// ─── Fuse.js search ─────────────────────────────
+(function () {
+  const rows      = Array.from(document.querySelectorAll('.project-row'));
+  const input     = document.getElementById('search-input');
+  const noResults = document.getElementById('no-results');
+  const counter   = document.getElementById('result-count');
+  if (!rows.length || !input) return;
+
+  const dataset = rows.map((row, i) => ({
+    index:    i,
+    name:     row.dataset.projectName     || '',
+    category: row.dataset.projectCategory || '',
+    date:     row.dataset.projectDate     || '',
+    time:     row.dataset.projectTime     || '',
+    file:     row.dataset.fileName        || '',
+  }));
+
+  const fuse = new Fuse(dataset, {
+    keys: ['name', 'category', 'date', 'time', 'file'],
+    threshold: 0.35,
+    minMatchCharLength: 1,
+  });
+
+  input.addEventListener('input', function () {
+    const q = this.value.trim();
+    if (!q) {
+      rows.forEach(r => r.classList.remove('hidden'));
+      noResults.classList.add('hidden');
+      counter.classList.add('hidden');
+      return;
+    }
+    const hits = new Set(fuse.search(q).map(r => r.item.index));
+    let visible = 0;
+    rows.forEach((row, i) => {
+      const show = hits.has(i);
+      row.classList.toggle('hidden', !show);
+      if (show) visible++;
+    });
+    noResults.classList.toggle('hidden', visible > 0);
+    counter.textContent = `${visible} / ${rows.length}`;
+    counter.classList.remove('hidden');
+  });
+})();
+
+// ─── Delete modal ────────────────────────────────
+let _pid = null;
+
+function confirmDelete(id, name) {
+  _pid = id;
+  document.getElementById('modal-project-name').textContent = name;
+  const m = document.getElementById('delete-modal');
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+}
+
+function closeDeleteModal() {
+  _pid = null;
+  const m = document.getElementById('delete-modal');
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+  const btn = document.getElementById('modal-confirm-btn');
+  btn.disabled = false;
+  btn.innerHTML = '<span class="material-symbols-outlined ms text-[15px]">delete</span> Delete';
+}
+
+document.getElementById('modal-confirm-btn').addEventListener('click', async function () {
+  if (!_pid) return;
+  this.disabled = true;
+  this.textContent = 'Deleting…';
+
+  try {
+    const res  = await fetch(`/delete-project/${_pid}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      const row = document.querySelector(`.project-row[data-project-id="${_pid}"]`);
+      if (row) {
+        row.style.transition = 'opacity 0.18s ease, transform 0.18s ease';
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(10px)';
+        setTimeout(() => row.remove(), 200);
+      } else {
+        window.location.reload();
+      }
+      closeDeleteModal();
+    } else {
+      alert('Failed to delete: ' + (data.error || 'Unknown error'));
+      this.disabled = false;
+      this.innerHTML = '<span class="material-symbols-outlined ms text-[15px]">delete</span> Delete';
+    }
+  } catch {
+    alert('Network error. Please try again.');
+    this.disabled = false;
+    this.innerHTML = '<span class="material-symbols-outlined ms text-[15px]">delete</span> Delete';
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeDeleteModal();
+});
+</script>
+</body>
+</html>
