@@ -364,7 +364,7 @@ def project_page(project_id):
         df = pd.read_csv(file_path) if file_path.endswith(".csv") else pd.read_excel(file_path)
 
         # Detect if last row is a score row
-        scores_exist   = False
+        scores_exist    = False
         existing_scores = {}
         if len(df) > 0:
             try:
@@ -375,13 +375,13 @@ def project_page(project_id):
             except Exception:
                 pass
 
-        data_df        = df.iloc[:-1] if scores_exist else df
-        total_records  = len(data_df)
+        data_df         = df.iloc[:-1] if scores_exist else df
+        total_records   = len(data_df)
         invalid_records = int(data_df.isnull().any(axis=1).sum())
-        valid_records  = total_records - invalid_records
+        valid_records   = total_records - invalid_records
         warning_records = int(data_df.duplicated().sum())
-        preview_data   = data_df.head(20).to_dict(orient="records")
-        columns        = df.columns.tolist()
+        preview_data    = data_df.head(20).to_dict(orient="records")
+        columns         = df.columns.tolist()
 
     except Exception as e:
         print("File Read Error:", e)
@@ -446,8 +446,8 @@ Respond ONLY with a valid JSON object. No explanation, no markdown.
 Example: {{"column_name": 85, "other_column": 42}}"""
 
     try:
-        ai_text         = strip_code_fences(ai_post(prompt, temperature=0.2))
-        scores          = json.loads(ai_text)
+        ai_text          = strip_code_fences(ai_post(prompt, temperature=0.2))
+        scores           = json.loads(ai_text)
         validated_scores = {col: max(0, min(100, int(scores.get(col, 50)))) for col in columns}
     except requests.exceptions.Timeout:
         return jsonify({"success": False, "error": "AI request timed out."}), 504
@@ -569,6 +569,10 @@ def start_processing(project_id):
         f'Column "{c["column"]}": {c["prompt"]}' for c in col_config
     )
 
+    # ─── FIXED AI PROMPT ──────────────────────────────────────────────────────
+    # The Efficiency_Score formula is hardcoded here so the AI cannot deviate.
+    # score = (columns_passed / total_columns) * 100  →  deterministic & accurate
+    # ──────────────────────────────────────────────────────────────────────────
     ai_prompt = (
         "You are an expert Python developer. Write a complete standalone Python script.\n\n"
         f"INPUT FILE  : {file_path}\n"
@@ -576,26 +580,129 @@ def start_processing(project_id):
         f"STATUS FILE : {status_path}\n\n"
         "VALIDATION RULES PER COLUMN:\n"
         f"{col_rules_str}\n\n"
-        "EXACT CODE STRUCTURE TO FOLLOW:\n"
+        "WRITE THE SCRIPT USING EXACTLY THIS STRUCTURE:\n\n"
         "import pandas as pd\n"
-        "import json, os, re\n"
+        "import json, os, re, shutil\n"
         "from openpyxl import Workbook\n"
         "from openpyxl.styles import PatternFill\n\n"
         f"INPUT_FILE  = r'{file_path}'\n"
         f"OUTPUT_FILE = r'{output_path}'\n"
         f"STATUS_FILE = r'{status_path}'\n\n"
-        "RED_FILL = PatternFill(start_color='FFFF0000', end_color='FFFF0000', fill_type='solid')\n\n"
+        "RED_FILL   = PatternFill(start_color='FFFF0000', end_color='FFFF0000', fill_type='solid')\n"
+        "GREEN_FILL = PatternFill(start_color='FF00B050', end_color='FF00B050', fill_type='solid')\n"
+        "AMBER_FILL = PatternFill(start_color='FFFFC000', end_color='FFFFC000', fill_type='solid')\n\n"
         "def write_status(status, progress, total, processed, invalid_rows_count, logs, error=None):\n"
         "    tmp = STATUS_FILE + '.tmp'\n"
         "    with open(tmp, 'w') as f:\n"
-        "        json.dump({'status': status, 'progress': progress, 'total_rows': total,\n"
-        "                   'processed_rows': processed, 'invalid_rows': invalid_rows_count,\n"
-        "                   'logs': logs, 'error': error}, f)\n"
-        "    import shutil; shutil.move(tmp, STATUS_FILE)\n\n"
-        "# One validation function per column returning (True,'') or (False,'reason')\n"
-        "# Main: read file, validate each row, apply RED fill on failures,\n"
-        "#       add Efficiency_Score column, save to OUTPUT_FILE, write_status complete.\n\n"
-        "OUTPUT ONLY THE COMPLETE PYTHON SCRIPT. NO MARKDOWN. NO EXPLANATION."
+        "        json.dump({\n"
+        "            'status': status, 'progress': progress, 'total_rows': total,\n"
+        "            'processed_rows': processed, 'invalid_rows': invalid_rows_count,\n"
+        "            'logs': logs, 'error': error\n"
+        "        }, f)\n"
+        "    shutil.move(tmp, STATUS_FILE)\n\n"
+        "# ── Per-column validation functions ───────────────────────────────────\n"
+        "# For EACH column listed in VALIDATION RULES, write:\n"
+        "#   def validate_<safe_col_name>(value) -> tuple[bool, str]\n"
+        "# Return (True, '') on pass, (False, 'short reason') on fail.\n"
+        "# Use re, isinstance, str checks as appropriate.\n\n"
+        "# ── Dispatcher ────────────────────────────────────────────────────────\n"
+        "# def validate_column(col_name: str, value) -> tuple[bool, str]:\n"
+        "#     Map col_name to the correct validate_* function.\n"
+        "#     Return (True, '') for any unknown column (safe fallback).\n\n"
+        "def main():\n"
+        "    write_status('running', 0, 0, 0, 0, ['Reading file...'])\n\n"
+        "    if INPUT_FILE.endswith('.csv'):\n"
+        "        df = pd.read_csv(INPUT_FILE)\n"
+        "    else:\n"
+        "        df = pd.read_excel(INPUT_FILE)\n\n"
+        "    # Drop trailing AI-score row if all values are numeric 0-100\n"
+        "    if len(df) > 0:\n"
+        "        last = df.iloc[-1].apply(pd.to_numeric, errors='coerce')\n"
+        "        if last.notna().all() and last.between(0, 100).all():\n"
+        "            df = df.iloc[:-1].reset_index(drop=True)\n\n"
+        "    COLUMNS    = df.columns.tolist()\n"
+        "    total_rows = len(df)\n"
+        "    write_status('running', 0, total_rows, 0, 0, ['Starting validation...'])\n\n"
+        "    # cell_pass[row_index] = list of bool, one per column\n"
+        "    cell_pass    = []\n"
+        "    cell_reasons = []  # parallel list of failure reasons\n\n"
+        "    for i, row in df.iterrows():\n"
+        "        row_pass    = []\n"
+        "        row_reasons = []\n"
+        "        for col in COLUMNS:\n"
+        "            passed, reason = validate_column(col, row[col])\n"
+        "            row_pass.append(passed)\n"
+        "            row_reasons.append(reason)\n"
+        "        cell_pass.append(row_pass)\n"
+        "        cell_reasons.append(row_reasons)\n"
+        "        if (i + 1) % 50 == 0 or (i + 1) == total_rows:\n"
+        "            pct = int((i + 1) / total_rows * 85)\n"
+        "            write_status('running', pct, total_rows, i + 1, 0,\n"
+        "                         [f'Validated {i + 1}/{total_rows} rows...'])\n\n"
+        "    # ── EFFICIENCY SCORE — FIXED FORMULA — DO NOT CHANGE ─────────────\n"
+        "    # For every row: Efficiency_Score = (passed_columns / total_columns) * 100\n"
+        "    # Rounded to 2 decimal places.\n"
+        "    # 100.00 = every column passed  (HIGH ACCURACY)\n"
+        "    #   0.00 = no column passed     (LOW ACCURACY)\n"
+        "    # This formula is deterministic and must not be altered.\n"
+        "    efficiency_scores = []\n"
+        "    for row_pass in cell_pass:\n"
+        "        if len(COLUMNS) == 0:\n"
+        "            efficiency_scores.append(0.0)\n"
+        "        else:\n"
+        "            score = round(sum(row_pass) / len(COLUMNS) * 100, 2)\n"
+        "            efficiency_scores.append(score)\n\n"
+        "    df['Efficiency_Score'] = efficiency_scores\n\n"
+        "    # ── Write XLSX with colour-coded cells ────────────────────────────\n"
+        "    wb = Workbook()\n"
+        "    ws = wb.active\n"
+        "    ws.title = 'Validated Data'\n\n"
+        "    all_cols = COLUMNS + ['Efficiency_Score']\n"
+        "    for c_idx, col in enumerate(all_cols, 1):\n"
+        "        ws.cell(row=1, column=c_idx, value=col)\n\n"
+        "    invalid_rows_count = 0\n"
+        "    for r_idx, (row_pass_list, score) in enumerate(zip(cell_pass, efficiency_scores), 2):\n"
+        "        row_has_failure = not all(row_pass_list)\n"
+        "        if row_has_failure:\n"
+        "            invalid_rows_count += 1\n"
+        "        for c_idx, (col, passed) in enumerate(zip(COLUMNS, row_pass_list), 1):\n"
+        "            val  = df.at[r_idx - 2, col]\n"
+        "            cell = ws.cell(row=r_idx, column=c_idx, value=val)\n"
+        "            if not passed:\n"
+        "                cell.fill = RED_FILL  # failed cell → red\n"
+        "        # Efficiency_Score cell: green ≥75, amber 50-74, red <50\n"
+        "        eff_cell = ws.cell(row=r_idx, column=len(COLUMNS) + 1, value=score)\n"
+        "        if score >= 75:\n"
+        "            eff_cell.fill = GREEN_FILL\n"
+        "        elif score >= 50:\n"
+        "            eff_cell.fill = AMBER_FILL\n"
+        "        else:\n"
+        "            eff_cell.fill = RED_FILL\n\n"
+        "    wb.save(OUTPUT_FILE)\n\n"
+        "    high_count = sum(1 for s in efficiency_scores if s >= 75)\n"
+        "    low_count  = total_rows - high_count\n"
+        "    high_pct   = round(high_count / total_rows * 100, 1) if total_rows else 0\n"
+        "    low_pct    = round(low_count  / total_rows * 100, 1) if total_rows else 0\n"
+        "    avg_score  = round(sum(efficiency_scores) / total_rows, 2) if total_rows else 0\n\n"
+        "    write_status(\n"
+        "        'complete', 100, total_rows, total_rows, invalid_rows_count,\n"
+        "        [\n"
+        "            f'Processing complete.',\n"
+        "            f'Total rows       : {total_rows}',\n"
+        "            f'High accuracy (≥75%) : {high_count} rows ({high_pct}%)',\n"
+        "            f'Low  accuracy (<75%) : {low_count} rows ({low_pct}%)',\n"
+        "            f'Average efficiency   : {avg_score}%',\n"
+        "        ]\n"
+        "    )\n\n"
+        "if __name__ == '__main__':\n"
+        "    main()\n\n"
+        "CRITICAL RULES — MUST FOLLOW:\n"
+        "1. Write validate_<safe_col_name>(value) for EVERY column in VALIDATION RULES.\n"
+        "   - safe_col_name = col name lowercased, spaces/special chars replaced with underscore.\n"
+        "2. write validate_column(col_name, value) dispatcher that routes to each function.\n"
+        "3. The Efficiency_Score formula above is LOCKED. Do NOT change it in any way.\n"
+        "4. Do NOT add extra scoring logic, weights, or multipliers.\n"
+        "5. Output ONLY the complete Python script. NO markdown fences. NO explanation.\n"
     )
 
     try:
@@ -674,7 +781,7 @@ def get_script(project_id, job_id):
 
 
 # =========================
-# FULL FILE DATA
+# FULL FILE DATA  ← returns ALL rows + accuracy stats
 # =========================
 @app.route("/project/<int:project_id>/full-data")
 @login_required
@@ -727,8 +834,46 @@ def full_data(project_id):
                        for r in df.values.tolist()]
             red_cells = []
 
-        return jsonify({"success": True, "headers": headers, "rows": rows,
-                        "red_cells": red_cells, "total": len(rows)})
+        # ── Accuracy stats derived from Efficiency_Score column ──────────────
+        accuracy_stats = {}
+        if "Efficiency_Score" in headers:
+            eff_idx = headers.index("Efficiency_Score")
+            scores  = []
+            for row in rows:
+                try:
+                    val = row[eff_idx]
+                    if val != "":
+                        scores.append(float(val))
+                except (ValueError, TypeError, IndexError):
+                    pass
+
+            if scores:
+                total      = len(scores)
+                high_rows  = [s for s in scores if s >= 75]
+                mid_rows   = [s for s in scores if 50 <= s < 75]
+                low_rows   = [s for s in scores if s < 50]
+                accuracy_stats = {
+                    "total_rows"          : total,
+                    "high_accuracy_count" : len(high_rows),
+                    "mid_accuracy_count"  : len(mid_rows),
+                    "low_accuracy_count"  : len(low_rows),
+                    "high_accuracy_pct"   : round(len(high_rows) / total * 100, 1),
+                    "mid_accuracy_pct"    : round(len(mid_rows)  / total * 100, 1),
+                    "low_accuracy_pct"    : round(len(low_rows)  / total * 100, 1),
+                    "avg_efficiency"      : round(sum(scores) / total, 2),
+                    "max_efficiency"      : round(max(scores), 2),
+                    "min_efficiency"      : round(min(scores), 2),
+                }
+
+        return jsonify({
+            "success"        : True,
+            "headers"        : headers,
+            "rows"           : rows,       # ALL rows — nothing hidden
+            "red_cells"      : red_cells,
+            "total"          : len(rows),
+            "accuracy_stats" : accuracy_stats,
+        })
+
     except Exception as e:
         import traceback; traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
@@ -766,6 +911,67 @@ def download_filtered(project_id):
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                      as_attachment=True,
                      download_name="filtered_data.xlsx")
+
+
+# =========================
+# DOWNLOAD HIGH ACCURACY ROWS ONLY
+# =========================
+@app.route("/project/<int:project_id>/download-high-accuracy", methods=["GET"])
+@login_required
+def download_high_accuracy(project_id):
+    """Downloads only rows with Efficiency_Score >= 75."""
+    from io import BytesIO
+    from openpyxl import Workbook as XLWorkbook
+
+    db     = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM projects WHERE project_id=%s AND email=%s",
+                   (project_id, session["email"]))
+    project = cursor.fetchone()
+    cursor.close()
+    db.close()
+
+    if not project:
+        return jsonify({"success": False, "error": "Project not found"}), 404
+
+    base_name = os.path.splitext(project["file_name"])[0]
+    xlsx_path = os.path.join("files", base_name + ".xlsx")
+    csv_path  = os.path.join("files", project["file_name"])
+    file_path = xlsx_path if os.path.exists(xlsx_path) else csv_path
+
+    if not os.path.exists(file_path):
+        return jsonify({"success": False, "error": "File not found"}), 404
+
+    try:
+        if file_path.endswith(".xlsx"):
+            df = pd.read_excel(file_path)
+        else:
+            df = pd.read_csv(file_path)
+
+        if "Efficiency_Score" not in df.columns:
+            return jsonify({"success": False, "error": "Efficiency_Score column not found. Run processing first."}), 400
+
+        df["Efficiency_Score"] = pd.to_numeric(df["Efficiency_Score"], errors="coerce").fillna(0)
+        high_df = df[df["Efficiency_Score"] >= 75]
+
+        wb = XLWorkbook()
+        ws = wb.active
+        ws.title = "High Accuracy"
+        for c_idx, col in enumerate(high_df.columns, 1):
+            ws.cell(row=1, column=c_idx, value=col)
+        for r_idx, (_, row) in enumerate(high_df.iterrows(), 2):
+            for c_idx, val in enumerate(row, 1):
+                ws.cell(row=r_idx, column=c_idx, value=val)
+
+        buf = BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+        return send_file(buf,
+                         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                         as_attachment=True,
+                         download_name="high_accuracy_rows.xlsx")
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 # =========================
